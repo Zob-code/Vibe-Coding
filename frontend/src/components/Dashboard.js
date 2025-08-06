@@ -30,7 +30,9 @@ const Dashboard = ({ data }) => {
       document.body.removeChild(a);
     } catch (error) {
       console.error('Error exporting PDF:', error);
-      alert('Failed to export PDF. Please try again.');
+      // Fallback: Show alert with data for manual copying
+      const dataText = JSON.stringify(data, null, 2);
+      alert(`PDF export unavailable. Here's your simulation data:\n\n${dataText.substring(0, 500)}...`);
     }
   };
 

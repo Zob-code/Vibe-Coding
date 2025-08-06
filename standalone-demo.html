@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Cost Efficiency Simulator - Standalone Demo</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        /* Embedded CSS from App.css */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            text-align: center;
+        }
+
+        .header-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .header-title .icon {
+            font-size: 2rem;
+        }
+
+        .header-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .app-layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            height: fit-content;
+            border: 1px solid #e9ecef;
+        }
+
+        .input-form-container h2 {
+            color: #495057;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #495057;
+            font-size: 0.95rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #e9ecef;
+            outline: none;
+            transition: background 0.2s ease;
+        }
+
+        .slider-value {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 3rem;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .dashboard {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            border: 1px solid #e9ecef;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-card.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-left: 4px solid #fff;
+        }
+
+        .metric-card h3 {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.8;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .chart-container h3 {
+            margin-bottom: 1rem;
+            color: #495057;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .placeholder {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            border: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+
+        .placeholder-content {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .app-layout {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Simulation logic (embedded from backend)
+        const simulateCosts = (params) => {
+            const {
+                teamSize,
+                onshorePercentage,
+                automationLevel,
+                cloudUsageLevel,
+                projectDurationMonths
+            } = params;
+
+            const BASE_RATES = {
+                onshore: 120,
+                offshore: 40,
+                workingHoursPerMonth: 160,
+                cloudBaseCostPerMonth: 500,
+                automationSetupCost: 10000
+            };
+
+            // Calculate team composition
+            const onshoreTeamSize = Math.round(teamSize * (onshorePercentage / 100));
+            const offshoreTeamSize = teamSize - onshoreTeamSize;
+
+            // Calculate base labor costs
+            const onshoreHourlyCost = onshoreTeamSize * BASE_RATES.onshore * BASE_RATES.workingHoursPerMonth;
+            const offshoreHourlyCost = offshoreTeamSize * BASE_RATES.offshore * BASE_RATES.workingHoursPerMonth;
+            const monthlyLaborCost = onshoreHourlyCost + offshoreHourlyCost;
+
+            // Calculate automation impact
+            const automationSavings = (automationLevel / 100) * monthlyLaborCost * 0.3;
+            const automationSetupCost = automationLevel > 0 ? BASE_RATES.automationSetupCost * (automationLevel / 100) : 0;
+            const adjustedMonthlyLaborCost = monthlyLaborCost - automationSavings;
+
+            // Calculate cloud costs
+            const baseCloudCost = BASE_RATES.cloudBaseCostPerMonth * teamSize;
+            const cloudMultiplier = 0.5 + (cloudUsageLevel / 100) * 1.5;
+            const monthlyCloudCost = baseCloudCost * cloudMultiplier;
+
+            // Calculate total costs
+            const totalLaborCost = adjustedMonthlyLaborCost * projectDurationMonths;
+            const totalCloudCost = monthlyCloudCost * projectDurationMonths;
+            const totalProjectCost = totalLaborCost + totalCloudCost + automationSetupCost;
+
+            // Calculate delivery time
+            const baseDeliveryTime = projectDurationMonths;
+            let deliveryTimeAdjustment = 0;
+            deliveryTimeAdjustment -= (automationLevel / 100) * 0.2;
+            if (onshorePercentage < 70) deliveryTimeAdjustment += 0.15;
+            deliveryTimeAdjustment -= (cloudUsageLevel / 100) * 0.1;
+            const estimatedDeliveryTime = Math.max(baseDeliveryTime * (1 + deliveryTimeAdjustment), projectDurationMonths * 0.7);
+
+            // Risk assessment
+            const riskFactors = [];
+            let totalRiskScore = 0;
+            if (onshorePercentage < 70) { riskFactors.push('High offshore dependency'); totalRiskScore += 0.3; }
+            if (automationLevel < 40) { riskFactors.push('Low automation level'); totalRiskScore += 0.2; }
+            if (cloudUsageLevel > 80) { riskFactors.push('High cloud dependency'); totalRiskScore += 0.15; }
+            if (teamSize > 20) { riskFactors.push('Large team coordination complexity'); totalRiskScore += 0.25; }
+            if (projectDurationMonths > 12) { riskFactors.push('Long project duration'); totalRiskScore += 0.2; }
+
+            let riskLevel = 'Low';
+            if (totalRiskScore > 0.3) riskLevel = 'Medium';
+            if (totalRiskScore > 0.6) riskLevel = 'High';
+
+            return {
+                inputs: params,
+                teamComposition: { onshore: onshoreTeamSize, offshore: offshoreTeamSize },
+                estimatedCost: Math.round(totalProjectCost),
+                estimatedDeliveryTime: Math.round(estimatedDeliveryTime * 10) / 10,
+                riskLevel,
+                riskFactors,
+                riskScore: Math.round(totalRiskScore * 100) / 100,
+                optimizationTips: [
+                    {
+                        category: 'Demo Mode',
+                        tip: 'This is a standalone demo. For full functionality, use the server version.',
+                        impact: 'Info',
+                        potentialSaving: 'N/A'
+                    }
+                ],
+                costBreakdown: {
+                    laborCost: Math.round(totalLaborCost),
+                    cloudCost: Math.round(totalCloudCost),
+                    automationSetupCost: Math.round(automationSetupCost),
+                    monthlyCosts: {
+                        labor: Math.round(adjustedMonthlyLaborCost),
+                        cloud: Math.round(monthlyCloudCost)
+                    }
+                },
+                savings: {
+                    automationSavings: Math.round(automationSavings * projectDurationMonths),
+                    potentialSavings: Math.round(totalProjectCost * 0.15)
+                },
+                timestamp: new Date().toISOString()
+            };
+        };
+
+        const InputForm = ({ onSimulate, isLoading }) => {
+            const [formData, setFormData] = useState({
+                teamSize: 10,
+                onshorePercentage: 70,
+                automationLevel: 50,
+                cloudUsageLevel: 60,
+                projectDurationMonths: 6
+            });
+
+            const handleInputChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({
+                    ...prev,
+                    [name]: parseFloat(value) || 0
+                }));
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                onSimulate(formData);
+            };
+
+            return (
+                <div className="input-form-container">
+                    <h2>Project Parameters</h2>
+                    <form onSubmit={handleSubmit} className="input-form">
+                        <div className="form-group">
+                            <label htmlFor="teamSize">Total Team Size</label>
+                            <input
+                                type="number"
+                                id="teamSize"
+                                name="teamSize"
+                                value={formData.teamSize}
+                                onChange={handleInputChange}
+                                min="1"
+                                max="100"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="onshorePercentage">Onshore vs Offshore (% Onshore)</label>
+                            <div className="slider-container">
+                                <input
+                                    type="range"
+                                    id="onshorePercentage"
+                                    name="onshorePercentage"
+                                    value={formData.onshorePercentage}
+                                    onChange={handleInputChange}
+                                    min="0"
+                                    max="100"
+                                    className="slider"
+                                />
+                                <span className="slider-value">{formData.onshorePercentage}%</span>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="automationLevel">Automation Level</label>
+                            <div className="slider-container">
+                                <input
+                                    type="range"
+                                    id="automationLevel"
+                                    name="automationLevel"
+                                    value={formData.automationLevel}
+                                    onChange={handleInputChange}
+                                    min="0"
+                                    max="100"
+                                    className="slider"
+                                />
+                                <span className="slider-value">{formData.automationLevel}%</span>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="cloudUsageLevel">Cloud Usage Level</label>
+                            <div className="slider-container">
+                                <input
+                                    type="range"
+                                    id="cloudUsageLevel"
+                                    name="cloudUsageLevel"
+                                    value={formData.cloudUsageLevel}
+                                    onChange={handleInputChange}
+                                    min="0"
+                                    max="100"
+                                    className="slider"
+                                />
+                                <span className="slider-value">{formData.cloudUsageLevel}%</span>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="projectDurationMonths">Project Duration (months)</label>
+                            <input
+                                type="number"
+                                id="projectDurationMonths"
+                                name="projectDurationMonths"
+                                value={formData.projectDurationMonths}
+                                onChange={handleInputChange}
+                                min="1"
+                                max="36"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-actions">
+                            <button
+                                type="submit"
+                                className="btn btn-primary"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? 'Running Simulation...' : 'Run Simulation'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            );
+        };
+
+        const Dashboard = ({ data }) => {
+            const getRiskColor = (riskLevel) => {
+                switch (riskLevel.toLowerCase()) {
+                    case 'low': return '#28a745';
+                    case 'medium': return '#ffc107';
+                    case 'high': return '#dc3545';
+                    default: return '#6c757d';
+                }
+            };
+
+            return (
+                <div className="dashboard">
+                    <div className="dashboard-header">
+                        <h2>Simulation Results</h2>
+                    </div>
+
+                    <div className="metrics-grid">
+                        <div className="metric-card primary">
+                            <h3>Total Project Cost</h3>
+                            <div className="metric-value">${data.estimatedCost.toLocaleString()}</div>
+                            <div className="metric-subtitle">
+                                Potential savings: ${data.savings.potentialSavings.toLocaleString()}
+                            </div>
+                        </div>
+
+                        <div className="metric-card">
+                            <h3>Delivery Time</h3>
+                            <div className="metric-value">{data.estimatedDeliveryTime} months</div>
+                            <div className="metric-subtitle">
+                                {data.estimatedDeliveryTime < data.inputs.projectDurationMonths 
+                                    ? `${(data.inputs.projectDurationMonths - data.estimatedDeliveryTime).toFixed(1)} months saved`
+                                    : 'On schedule'
+                                }
+                            </div>
+                        </div>
+
+                        <div className="metric-card" style={{ borderLeft: `4px solid ${getRiskColor(data.riskLevel)}` }}>
+                            <h3>Risk Assessment</h3>
+                            <div className="metric-value" style={{ color: getRiskColor(data.riskLevel) }}>
+                                {data.riskLevel}
+                            </div>
+                            <div className="metric-subtitle">
+                                Risk score: {(data.riskScore * 100).toFixed(0)}%
+                            </div>
+                        </div>
+
+                        <div className="metric-card">
+                            <h3>Automation Savings</h3>
+                            <div className="metric-value">${data.savings.automationSavings.toLocaleString()}</div>
+                            <div className="metric-subtitle">
+                                From {data.inputs.automationLevel}% automation
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="charts-section">
+                        <div className="chart-container">
+                            <h3>Cost Breakdown</h3>
+                            <div className="chart-wrapper">
+                                <canvas id="costChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div className="chart-container">
+                            <h3>Team Composition</h3>
+                            <div className="chart-wrapper">
+                                <canvas id="teamChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    {data.riskFactors && data.riskFactors.length > 0 && (
+                        <div style={{ marginTop: '2rem', padding: '1rem', background: '#f8f9fa', borderRadius: '10px' }}>
+                            <h3 style={{ marginBottom: '1rem', color: '#495057' }}>Risk Factors</h3>
+                            {data.riskFactors.map((factor, index) => (
+                                <div key={index} style={{ marginBottom: '0.5rem', padding: '0.5rem', background: 'white', borderRadius: '5px' }}>
+                                    ⚠️ {factor}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [simulationData, setSimulationData] = useState(null);
+            const [isLoading, setIsLoading] = useState(false);
+
+            const handleSimulation = (inputData) => {
+                setIsLoading(true);
+                
+                // Simulate API delay
+                setTimeout(() => {
+                    const result = simulateCosts(inputData);
+                    setSimulationData(result);
+                    setIsLoading(false);
+                    
+                    // Create charts after data is set
+                    setTimeout(createCharts, 100);
+                }, 500);
+            };
+
+            const createCharts = () => {
+                if (!simulationData) return;
+
+                // Cost breakdown chart
+                const costCtx = document.getElementById('costChart');
+                if (costCtx) {
+                    new Chart(costCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Labor Costs', 'Cloud Infrastructure', 'Automation Setup'],
+                            datasets: [{
+                                data: [
+                                    simulationData.costBreakdown.laborCost,
+                                    simulationData.costBreakdown.cloudCost,
+                                    simulationData.costBreakdown.automationSetupCost
+                                ],
+                                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
+                        }
+                    });
+                }
+
+                // Team composition chart
+                const teamCtx = document.getElementById('teamChart');
+                if (teamCtx) {
+                    new Chart(teamCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Onshore', 'Offshore'],
+                            datasets: [{
+                                data: [simulationData.teamComposition.onshore, simulationData.teamComposition.offshore],
+                                backgroundColor: ['#4BC0C0', '#FF9F40']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
+                        }
+                    });
+                }
+            };
+
+            return (
+                <div>
+                    <header className="header">
+                        <div className="container">
+                            <div className="header-content">
+                                <h1 className="header-title">
+                                    <span className="icon">📊</span>
+                                    Client Cost Efficiency Simulator
+                                </h1>
+                                <p className="header-subtitle">
+                                    Standalone Demo - Optimize your project delivery models and costs
+                                </p>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main>
+                        <div className="container">
+                            <div className="app-layout">
+                                <InputForm onSimulate={handleSimulation} isLoading={isLoading} />
+                                
+                                <div>
+                                    {simulationData ? (
+                                        <Dashboard data={simulationData} />
+                                    ) : (
+                                        <div className="placeholder">
+                                            <div className="placeholder-content">
+                                                <h3>Welcome to Cost Efficiency Simulator</h3>
+                                                <p>Fill in the form parameters and click "Run Simulation" to see your project cost analysis.</p>
+                                                <p style={{ marginTop: '1rem', color: '#666', fontSize: '0.9rem' }}>
+                                                    📱 This is a standalone demo. For full features including PDF export, use the server version.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
