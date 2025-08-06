@@ -1,0 +1,19 @@
+{
+  "name": "client-cost-efficiency-simulator",
+  "version": "1.0.0",
+  "description": "Web-based application for simulating project costs and delivery outcomes",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm start",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build"
+  },
+  "keywords": ["cost-simulator", "project-management", "delivery-optimization"],
+  "author": "Developer",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  }
+}
